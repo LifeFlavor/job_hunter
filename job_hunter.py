@@ -4,11 +4,22 @@ from bs4 import BeautifulSoup
 import time
 import os
 from datetime import datetime
+import re
 
 # 1. 設定監控目標
 TARGET_JOBS = [
     {"company": "OKX", "url": "https://www.okx.com/join-us/openings"},
     {"company": "LINE", "url": "https://careers.linecorp.com/jobs?ca=All&ci=Taipei&co=East%20Asia"},
+]
+
+# 只通知「符合的職缺關鍵字」；否則回傳「無新增職缺」
+# 用 regex 避免誤判，例如 Taipei 內的 "ai"
+KEYWORD_PATTERNS = [
+    ("product manager", r"\bproduct manager\b"),
+    ("product marketing manager", r"\bproduct marketing manager\b"),
+    ("AI相關", r"\bai\b"),
+    ("AI相關", r"artificial intelligence"),
+    ("AI相關", r"\bmachine learning\b"),
 ]
 
 # 2. Telegram 設定
@@ -40,6 +51,14 @@ def check_jobs():
     current_all_titles = set()
     new_found = []
 
+    def contains_relevant_keyword(text):
+        matched = []
+        for label, pattern in KEYWORD_PATTERNS:
+            if re.search(pattern, text, flags=re.IGNORECASE):
+                matched.append(label)
+        # 去重但保留順序
+        return list(dict.fromkeys(matched))
+
     for job in TARGET_JOBS:
         print(f"[{datetime.now().strftime('%H:%M:%S')}] 正在掃描 {job['company']}...")
         try:
@@ -55,18 +74,28 @@ def check_jobs():
             current_all_titles.add(identifier)
 
             if identifier not in old_jobs:
-                new_found.append(f"🚀 {job['company']} 網頁內容有更新！\n連結：{job['url']}")
+                matched_keywords = contains_relevant_keyword(page_text)
+                if matched_keywords:
+                    new_found.append(
+                        f"🚀 {job['company']} 可能有新增相關職缺！\n連結：{job['url']}\n命中關鍵字：{', '.join(matched_keywords)}"
+                    )
         
         except Exception as e:
             print(f"掃描 {job['company']} 失敗: {e}")
 
-    # 如果有新發現，才發通知
-    if new_found:
-        for msg in new_found:
-            send_telegram_msg(msg)
+    # 有命中就送更新訊息；沒有命中就送「無新增職缺」
+    try:
+        if new_found:
+            for msg in new_found:
+                send_telegram_msg(msg)
+            has_relevant = True
+        else:
+            send_telegram_msg("無新增職缺")
+            has_relevant = False
+    finally:
         save_jobs(current_all_titles)
-        return True
-    return False
+
+    return has_relevant
 
 if __name__ == "__main__":
     # 這裡可以不用發「進入監控模式」的訊息，因為每次執行都是獨立的
