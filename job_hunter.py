@@ -69,18 +69,7 @@ def check_jobs():
     return False
 
 if __name__ == "__main__":
-    send_telegram_msg("🤖 獵頭機器人已進入「每日 09:00 定時監控」模式")
-    
-    while True:
-        now = datetime.now()
-        # 判斷是否為早上 09:00 (或是 09:00 到 09:01 之間)
-        if now.hour == 9 and now.minute == 0:
-            print("🕒 到達設定時間，開始執行掃描...")
-            has_new = check_jobs()
-            if not has_new:
-                print("查無新職缺，繼續待命。")
-            # 執行完後睡 65 秒，避開同一分鐘內重複偵測
-            time.sleep(65) 
-        
-        # 每分鐘檢查一次時間
-        time.sleep(30)
+    # 這裡可以不用發「進入監控模式」的訊息，因為每次執行都是獨立的
+    print("🕒 開始執行定時掃描...")
+    check_jobs()
+    print("✅ 掃描完成，程式結束。")
