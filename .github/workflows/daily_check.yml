@@ -2,21 +2,24 @@ name: Daily Job Check
 
 on:
   schedule:
-    # 這裡設定為 UTC 07:00，即台灣時間 15:00 (3PM)
-    - cron: '0 7 * * *'
-  workflow_dispatch: # 讓妳也可以手動點擊執行
+    - cron: '0 7 * * *' 
+  workflow_dispatch: # 讓妳可以手動點擊執行測試
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4 # 補上 @v4
       - name: Set up Python
-        uses: actions/set-python@v2
+        uses: actions/setup-python@v4 # 修正名稱並補上 @v4
         with:
           python-version: '3.9'
       - name: Install dependencies
         run: pip install requests beautifulsoup4
       - name: Run script
+        env:
+          # 這一步最重要：把 GitHub Secrets 傳給 Python
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python job_hunter.py
