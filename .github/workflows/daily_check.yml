@@ -2,9 +2,8 @@ name: Daily Job Check
 
 on:
   schedule:
-    # 這裡設定時間。注意：GitHub 使用 UTC 時間，
-    # 所以台灣時間 09:00 是 UTC 01:00
-    - cron: '0 1 * * *' 
+    # 這裡設定為 UTC 07:00，即台灣時間 15:00 (3PM)
+    - cron: '0 7 * * *'
   workflow_dispatch: # 讓妳也可以手動點擊執行
 
 jobs:
