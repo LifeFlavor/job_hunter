@@ -2,7 +2,7 @@ name: Daily Job Check
 
 on:
   schedule:
-    - cron: '0 11 * * *' 
+    - cron: '0 9 * * *' 
   workflow_dispatch: # 讓妳可以手動點擊執行測試
 
 jobs:
